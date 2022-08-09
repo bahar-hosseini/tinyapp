@@ -30,7 +30,7 @@ const generateRandomString = () => {
   for (let i = 6; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
   return result;
 };
-let randomNum = generateRandomString();
+const randomNum = generateRandomString();
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -49,6 +49,7 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
@@ -80,12 +81,13 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  
   urlDatabase[randomNum] = req.body.longURL;
-  
-  
+  res.redirect(`/urls/${randomNum}`);
+});
 
-  res.redirect('/urls');
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
 });
 
 app.get("/urls/:id", (req, res) => {
