@@ -31,10 +31,6 @@ const generateRandomString = () => {
   return result;
 };
 
-
-
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////Mock Database
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,6 +91,16 @@ app.post("/urls", (req, res) => {
   const newId = generateRandomString();
   urlDatabase[newId] = req.body.longURL;
   res.redirect(`/urls/${newId}`);
+});
+
+/**
+ **POST Edit URLs
+*/
+
+app.post('/urls/edit/:id',(req,res)=>{
+  const id = req.params.id;
+  urlDatabase[id] = req.body.newURL;
+  res.redirect('/urls');
 });
 
 /**

@@ -24,19 +24,17 @@
 
       <div class="card-footer text-muted">
         <h2 class="text-secondary">Edit</h2>
-        <form class="form-inline">
+        <form class="form-inline" method="POST" action="/urls/edit/<%= id %>">
           <div class="container">
             <div class="row justify-content-center">
               <div class="form-group mx-md-3 mb-2">
                 <div class="p-2">
-                  <label for="inputPassword2" class="text-secondary">
-                    New URL:
-                  </label>
+                  <label class="text-secondary"> New URL: </label>
                 </div>
                 <input
+                  name="newURL"
                   type="text"
                   class="form-control"
-                  id="inputPassword2"
                   placeholder="New URL"
                 />
               </div>
