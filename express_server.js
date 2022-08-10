@@ -119,14 +119,18 @@ app.post('/urls/:id/delete',(req,res)=>{
  */
 
 app.post('/login',(req,res)=>{
-  let value = req.body.username;
+  const value = req.body.username;
   res.cookie('username',value);
   res.redirect('/urls');
 });
 
 /**
- ** Logged in routes
+ ** Logout routes
  */
+app.post('/logout',(req,res)=>{
+  res.clearCookie('username');
+  res.redirect('/urls');
+});
 
 
 

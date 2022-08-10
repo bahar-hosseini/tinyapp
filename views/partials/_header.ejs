@@ -21,7 +21,9 @@
 
     <% if (username){%>
     <h4 class="text-dark m-2">Logged in as: <%= username%></h4>
-    <button type="submit" class="btn btn-outline-dark">Logout</button>
+    <form method="POST" action="/logout">
+      <button type="submit" class="btn btn-outline-dark">Logout</button>
+    </form>
     <%} else{ %>
     <form method="POST" action="/login">
       <div class="form-inline">
@@ -33,7 +35,9 @@
             placeholder="Username"
           />
         </div>
-        <button type="submit" class="btn btn-outline-dark">Login</button>
+        <button type="submit" name="logout" class="btn btn-outline-dark">
+          Login
+        </button>
       </div>
     </form>
     <%}%>
