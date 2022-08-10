@@ -84,7 +84,16 @@ app.get("/urls/:id", (req, res) => {
 });
 
 /**
- **POST NEW URL
+ ** Get register
+*/
+
+app.get('/register',(req,res)=>{
+  res.render("urls-registration");
+});
+
+
+/**
+ **POST NEW UR
 */
 
 app.post("/urls", (req, res) => {
@@ -127,10 +136,16 @@ app.post('/login',(req,res)=>{
 /**
  ** Logout routes
  */
+
 app.post('/logout',(req,res)=>{
   res.clearCookie('username');
   res.redirect('/urls');
 });
+
+/**
+ ** Post register
+*/
+
 
 
 
