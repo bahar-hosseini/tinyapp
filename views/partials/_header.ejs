@@ -19,27 +19,29 @@
       </div>
     </div>
 
-    <% if (username){%>
-    <h4 class="text-dark m-2">Logged in as: <%= username%></h4>
+    <% if (user) {%>
+    <h4 class="text-dark m-2">Logged in as: <%= user.email%></h4>
     <form method="POST" action="/logout">
-      <button type="submit" class="btn btn-outline-dark">Logout</button>
+      <button type="submit" name="logout" class="btn btn-outline-dark">
+        Logout
+      </button>
     </form>
-    <%} else{ %>
-    <form method="POST" action="/login">
+    <% } else { %>
+    <!-- <form method="POST" action="/login">
       <div class="form-inline">
-        <div class="input-group mr-3">
-          <input
+        <div class="input-group mr-3"> -->
+          <!-- <input
             type="text"
             name="username"
             class="form-control"
-            placeholder="Username"
-          />
+            placeholder="Email" -->
+  
         </div>
-        <button type="submit" name="logout" class="btn btn-outline-dark">
-          Login
-        </button>
-      </div>
-    </form>
-    <%}%>
+        <a href="/register">
+          <button type="submit" class="btn btn-outline-dark">Register</button>
+        </a>
+      <!-- </div>
+    </form> -->
+    <% } %>
   </nav>
 </header>
