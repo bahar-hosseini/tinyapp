@@ -185,9 +185,21 @@ app.post('/register',(req,res)=>{
     email : req.body.email,
     password: req.body.password
   };
+  if (value.email === '' || value.password === '') {
+    return  res.status(404).send("Email or Password is missed");
+  }
+  for (let user in users) {
+    if (value.email === users[user]['email']) {
+      return  res.status(400).send("Email exists");
+    }
+  }
+
   users[generateId] = value;
   res.cookie('user_id',generateId);
   res.redirect('/urls');
+
+
+
 });
 
 
