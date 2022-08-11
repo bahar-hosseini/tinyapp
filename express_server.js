@@ -64,6 +64,7 @@ const findUserByEmail = (email) => {
       return users[userId];
     }
   }
+  return false;
 };
 
 
@@ -97,15 +98,22 @@ app.get('/urls',(req,res) => {
 
 app.get("/urls/new", (req, res) => {
   const userId = req.cookies['user_id'];
-  const user = users[userId];
-  const templateVars = {
-    user
-  };
-  return  res.render("urls_new", templateVars);
+  if (userId) {
+    const user = users[userId];
+    const templateVars = {
+      user
+    };
+    return res.render("urls_new", templateVars);
+  }
+  res.redirect('/login');
 });
 
 app.get("/u/:id", (req, res) => {
+
   const longURL = urlDatabase[req.params.id];
+  if (!longURL) {
+    res.send(`<h2>This url was not added</h2>`);
+  }
   res.redirect(longURL);
 });
 
@@ -123,8 +131,10 @@ app.get("/urls/:id", (req, res) => {
 */
 
 app.get('/register',(req,res)=>{
-
   const userId = req.cookies['user_id'];
+  if (userId) {
+    res.redirect('/urls');
+  }
   const user = users[userId];
   const templateVars = {
     user
@@ -139,6 +149,9 @@ app.get('/register',(req,res)=>{
 app.get('/login',(req,res)=>{
   
   const userId = req.cookies['user_id'];
+  if (userId) {
+    res.redirect('/urls');
+  }
   const user = users[userId];
   const templateVars = {
     user
@@ -151,6 +164,10 @@ app.get('/login',(req,res)=>{
 */
 
 app.post("/urls", (req, res) => {
+  const userId = req.cookies['user_id'];
+  if (!userId) {
+    return res.send(`<h1>You must be login</h1>`);
+  }
   const newId = generateRandomString();
   urlDatabase[newId] = req.body.longURL;
   res.redirect(`/urls/${newId}`);
@@ -245,6 +262,11 @@ app.post('/register',(req,res)=>{
   res.cookie('user_id',generateId);
   res.redirect('/urls');
 });
+
+
+/**
+ ** 404 error
+*/
 
 
 
