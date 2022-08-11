@@ -54,6 +54,19 @@ const users = {
 };
 
 
+/**
+ ** Helper function
+*/
+
+const findUserByEmail = (email) => {
+  for (let userId in users) {
+    if (users[userId]['email'] === email) {
+      return users[userId];
+    }
+  }
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////Get Requests
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,9 +92,6 @@ app.get('/urls',(req,res) => {
 
   const templateVars = { urls: urlDatabase,user
   };
-  // if (user) {
-  //   templateVars.user = user;
-  // }
   return  res.render("urls_index", templateVars);
 });
 
@@ -171,30 +181,32 @@ app.post('/urls/:id/delete',(req,res)=>{
  */
 
 app.post('/login',(req,res)=>{
-  // const email = req.body.email;
-  // const password = req.body.password;
-
-  // for (let user in users) {
-  //   if (email === users[user]['email']) {
-  //     if (password === users[user]['password']) {
-  //       res.redirect('/urls');
-  //     }
-  //   }
-  // }
-  // res.cookie('user_id',generateId);
-  // return res.send('email or password doesn\'t match');
-
-
+  const email = req.body.email;
+  const password = req.body.password;
   const generateId = generateRandomString();
   const value = {
     id : generateId,
     email : req.body.email,
     password: req.body.password,
-    userId : res.cookie('user_id',generateId)
   };
   users[generateId] = value;
-  res.cookie('user_id',generateId);
-  res.redirect('/urls');
+  
+  const user = findUserByEmail(value.email);
+
+  if (!user) {
+    return res.status(403).send('You are not registered yet');
+  }
+
+  for (let user in users) {
+    if (email === users[user]['email']) {
+      if (password === users[user]['password']) {
+        res.cookie('user_id',generateId);
+        res.redirect('/urls');
+      }
+    }
+    return res.status(403).send('email or password doesn\'t match');
+  }
+
 });
 
 /**
@@ -218,16 +230,18 @@ app.post('/register',(req,res)=>{
     password: req.body.password,
     userId : res.cookie('user_id',generateId)
   };
+  //check if email or password is not inserted.
   if (value.email === '' || value.password === '') {
     return  res.status(404).send("Email or Password is missed");
   }
-  for (let user in users) {
-    if (value.email === users[user]['email']) {
-      return  res.status(400).send("Email exists");
-    }
-  }
-  users[generateId] = value;
 
+  //check if you have registerd before(your data is in the db).
+  const findEmail = findUserByEmail(value.email);
+  if (findEmail) {
+    return  res.status(400).send("Email exists");
+  }
+  
+  users[generateId] = value;
   res.cookie('user_id',generateId);
   res.redirect('/urls');
 });
