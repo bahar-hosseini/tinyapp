@@ -69,9 +69,9 @@ const users = {
  ** Helper function
 */
 
-const findUserByEmail = (email) => {
-  for (let userId in users) {
-    if (users[userId]['email'] === email) {
+const findUserByEmail = (email,database) => {
+  for (let userId in database) {
+    if (database[userId]['email'] === email) {
       return users[userId];
     }
   }
@@ -224,7 +224,7 @@ app.post("/urls", (req, res) => {
 
 app.post('/urls/edit/:id',(req,res)=>{
   // const userId = req.cookies['user_id'];
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
   const urlUser = urlsForUser(userId);
   if (urlUser) {
     const id = req.params.id;
@@ -270,12 +270,14 @@ app.post('/login',(req,res)=>{
   users[generateId] = value;
   
   //using helper function
-  const user = findUserByEmail(value.email);
+  const user = findUserByEmail(value.email,urlDatabase);
 
+  //cheking if the user has registerd befor (using helper function)
   if (!user) {
     return res.status(403).send('You are not registered yet');
   }
 
+  //checking if the username and pasword match
   for (let user in users) {
     if (email === users[user]['email']) {
       if (password === users[user]['password']) {
@@ -295,7 +297,7 @@ app.post('/login',(req,res)=>{
 
 app.post('/logout',(req,res)=>{
   // res.clearCookie('user_id');
-  res.session = null;
+  req.session = null;
   res.redirect('/urls');
 });
 
@@ -309,13 +311,14 @@ app.post('/register',(req,res)=>{
   const email = req.body.email;
   const password = req.body.password;
   // const userId = res.cookie('user_id',generateId);
+  const userId = req.session['user_id'] = generateId;
 
 
   const value = {
     id,
     email,
     password :  bcrypt.hashSync(password , salt),
-    userId : req.session['user_id'] = generateId,
+    userId
   };
 
   //checking if email or password is not inserted.
@@ -324,7 +327,7 @@ app.post('/register',(req,res)=>{
   }
 
   //checking if you have registerd before(your data is in the db).
-  const findEmail = findUserByEmail(value.email);
+  const findEmail = findUserByEmail(value.email,urlDatabase);
 
   if (findEmail) {
     return  res.status(400).send("Email exists");
