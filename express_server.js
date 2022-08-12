@@ -11,6 +11,12 @@ const bcrypt = require("bcryptjs");
 const salt = bcrypt.genSaltSync(10);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////Internal Modules
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+const findUserByEmail = require('./helpers');
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////Template engines (Ejs)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -68,16 +74,6 @@ const users = {
 /**
  ** Helper function
 */
-
-const findUserByEmail = (email,database) => {
-  for (let userId in database) {
-    if (database[userId]['email'] === email) {
-      return users[userId];
-    }
-  }
-  return false;
-};
-
 
 const urlsForUser = (id) =>{
   for (let key in urlDatabase) {
@@ -270,7 +266,7 @@ app.post('/login',(req,res)=>{
   users[generateId] = value;
   
   //using helper function
-  const user = findUserByEmail(value.email,urlDatabase);
+  const user = findUserByEmail(value.email,users);
 
   //cheking if the user has registerd befor (using helper function)
   if (!user) {
@@ -313,7 +309,7 @@ app.post('/register',(req,res)=>{
   // const userId = res.cookie('user_id',generateId);
   const userId = req.session['user_id'] = generateId;
 
-
+  //collecting id, email and password as a value to assign it to users database
   const value = {
     id,
     email,
@@ -327,7 +323,7 @@ app.post('/register',(req,res)=>{
   }
 
   //checking if you have registerd before(your data is in the db).
-  const findEmail = findUserByEmail(value.email,urlDatabase);
+  const findEmail = findUserByEmail(value.email,users);
 
   if (findEmail) {
     return  res.status(400).send("Email exists");
