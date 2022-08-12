@@ -14,7 +14,8 @@ const salt = bcrypt.genSaltSync(10);
 ///////Internal Modules
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const findUserByEmail = require('./helpers');
+const getUserByEmail = require('./helpers');
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////Template engines (Ejs)
@@ -106,7 +107,10 @@ app.get('/urls',(req,res) => {
   // const userId = req.cookies['user_id'];
   const userId = req.session.user_id;
   if (!userId) {
-    res.send(`<h1>You have to login</h1>`);
+    res.send(`<div><h1>You have to login</h1>
+    <p>You can use one of these links:</p>
+    <a href='/register'>Register</a>
+    <a href='/login'>Login</a><div>`);
   }
 
   const user = users[userId];
@@ -134,12 +138,12 @@ app.get("/urls/new", (req, res) => {
 */
 app.get("/u/:id", (req, res) => {
 
-  const longURL = urlDatabase[req.params.id]['longURL'];
+  const longURL = urlDatabase[req.params.id];
 
   if (!longURL) {
-    res.send(`<h2>This url was not added</h2>`);
+    return res.send(`<h2>This url was not added</h2>`);
   }
-  res.redirect(longURL);
+  return res.redirect(longURL['longURL']);
 });
 /**
  ** Get particular URL to update (showing the user their newly created short url on the app)
@@ -266,7 +270,7 @@ app.post('/login',(req,res)=>{
   users[generateId] = value;
   
   //using helper function
-  const user = findUserByEmail(value.email,users);
+  const user = getUserByEmail(email,users);
 
   //cheking if the user has registerd befor (using helper function)
   if (!user) {
@@ -274,17 +278,14 @@ app.post('/login',(req,res)=>{
   }
 
   //checking if the username and pasword match
-  for (let user in users) {
-    if (email === users[user]['email']) {
-      if (password === users[user]['password']) {
-        // res.cookie('user_id',generateId);
-        req.session['user_id'] = generateId;
-        res.redirect('/urls');
-      }
+  if (user) {
+    if (password === users[user]['password']) {
+      // res.cookie('user_id',generateId);
+      req.session['user_id'] = generateId;
+      res.redirect('/urls');
     }
-    return res.status(403).send('email or password doesn\'t match');
   }
-
+  return res.status(403).send('email or password doesn\'t match');
 });
 
 /**
@@ -323,7 +324,7 @@ app.post('/register',(req,res)=>{
   }
 
   //checking if you have registerd before(your data is in the db).
-  const findEmail = findUserByEmail(value.email,users);
+  const findEmail = getUserByEmail(value.email,users);
 
   if (findEmail) {
     return  res.status(400).send("Email exists");
@@ -338,9 +339,6 @@ app.post('/register',(req,res)=>{
 /**
  ** 404 error
 */
-
-
-
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

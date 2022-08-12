@@ -2,13 +2,13 @@
  ** Helper function
 */
 
-const findUserByEmail = (email,database) => {
+const getUserByEmail = (email,database) => {
   for (let userId in database) {
     if (database[userId]['email'] === email) {
-      return database[userId];
+      return userId;
     }
   }
   return false;
 };
 
-module.exports = findUserByEmail;
+module.exports = getUserByEmail;
