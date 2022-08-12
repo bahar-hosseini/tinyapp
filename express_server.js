@@ -36,8 +36,8 @@ const generateRandomString = () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2":{longURL:"http://www.lighthouselabs.ca",userID: "aJ48lW"} ,
+  "9sm5xK":{longURL:"http://www.google.com",userID: "aJ48lW"} ,
 };
 
 const users = {
@@ -68,6 +68,14 @@ const findUserByEmail = (email) => {
 };
 
 
+const urlsForUser = (id) =>{
+  for (let key in urlDatabase) {
+    if (id === urlDatabase[key]['userID'])
+      return urlDatabase[key]['longURL'];
+  }
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////Get Requests
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -89,6 +97,12 @@ app.get("/hello", (req, res) => {
 
 app.get('/urls',(req,res) => {
   const userId = req.cookies['user_id'];
+  if (!userId) {
+    res.send(`<h1>You have to login</h1>`);
+  }
+
+
+
   const user = users[userId];
 
   const templateVars = { urls: urlDatabase,user
@@ -110,7 +124,8 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
 
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id]['longURL'];
+
   if (!longURL) {
     res.send(`<h2>This url was not added</h2>`);
   }
@@ -119,11 +134,19 @@ app.get("/u/:id", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const userId = req.cookies['user_id'];
-  const user = users[userId];
-  const templateVars = { id: req.params.id, longURL:urlDatabase[req.params.id],user};
 
-  res.render("urls_show", templateVars);
+  const urlUser = urlsForUser(userId);
+  if (!userId) {
+    return  res.send('<h2>Please signin</h2>');
+  }
+  if (urlUser) {
+    const user = users[userId];
+    const id = req.params.id;
+    const templateVars = { id, longURL:urlUser,user};
+    return  res.render("urls_show", templateVars);
+  }
 
+  return  res.send(`<h2>You haven't added this url</h2>`);
 });
 
 /**
@@ -169,7 +192,8 @@ app.post("/urls", (req, res) => {
     return res.send(`<h1>You must be login</h1>`);
   }
   const newId = generateRandomString();
-  urlDatabase[newId] = req.body.longURL;
+  urlDatabase[newId] = {longURL:req.body.longURL,
+    userID:userId};
   res.redirect(`/urls/${newId}`);
 });
 
@@ -178,9 +202,14 @@ app.post("/urls", (req, res) => {
 */
 
 app.post('/urls/edit/:id',(req,res)=>{
-  const id = req.params.id;
-  urlDatabase[id] = req.body.newURL;
-  res.redirect('/urls');
+  const userId = req.cookies['user_id'];
+  const urlUser = urlsForUser(userId);
+  if (urlUser) {
+    const id = req.params.id;
+    urlDatabase[id] = {longURL:req.body.newURL,userID:userId};
+    return  res.redirect('/urls');
+  }
+  return res.send(`<h2>You can not edit this URL</h2>`);
 });
 
 /**
@@ -188,9 +217,14 @@ app.post('/urls/edit/:id',(req,res)=>{
 */
 
 app.post('/urls/:id/delete',(req,res)=>{
-  const id = req.params.id;
-  delete urlDatabase[id];
-  res.redirect('/urls');
+  const userId = req.cookies['user_id'];
+  const urlUser = urlsForUser(userId);
+  if (urlUser) {
+    const id = req.params.id;
+    delete urlDatabase[id];
+    return  res.redirect('/urls');
+  }
+  return res.send(`<h2>You can not delete this URL</h2>`);
 });
 
 /**
