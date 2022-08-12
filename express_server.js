@@ -6,7 +6,9 @@ const app = express();
 const PORT = 8080;
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
-app.use(cookieParser());
+const bcrypt = require("bcryptjs");
+const salt = bcrypt.genSaltSync(10);
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////Template engines (Ejs)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -17,6 +19,7 @@ app.set('view engine','ejs');
 ///////Middleware
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+app.use(cookieParser());
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
 
@@ -122,6 +125,9 @@ app.get("/urls/new", (req, res) => {
   res.redirect('/login');
 });
 
+/**
+ ** Get requests to the endpoint "/u/:id" will redirect to its longURL
+*/
 app.get("/u/:id", (req, res) => {
 
   const longURL = urlDatabase[req.params.id]['longURL'];
@@ -131,7 +137,9 @@ app.get("/u/:id", (req, res) => {
   }
   res.redirect(longURL);
 });
-
+/**
+ ** Get particular URL to update (showing the user their newly created short url on the app)
+*/
 app.get("/urls/:id", (req, res) => {
   const userId = req.cookies['user_id'];
 
@@ -235,11 +243,17 @@ app.post('/login',(req,res)=>{
   const email = req.body.email;
   const password = req.body.password;
   const generateId = generateRandomString();
+
+
   const value = {
     id : generateId,
-    email : req.body.email,
-    password: req.body.password,
+    email,
+    password :  bcrypt.hashSync(password , salt),
+    userId : req.cookies['user_id'],
   };
+
+ 
+
   users[generateId] = value;
   
   const user = findUserByEmail(value.email);
@@ -275,19 +289,26 @@ app.post('/logout',(req,res)=>{
 
 app.post('/register',(req,res)=>{
   const generateId = generateRandomString();
+  const id = generateId;
+  const email = req.body.email;
+  const password = req.body.password;
+  const userId = res.cookie('user_id',generateId);
+
   const value = {
-    id : generateId,
-    email : req.body.email,
-    password: req.body.password,
-    userId : res.cookie('user_id',generateId)
+    id,
+    email,
+    password :  bcrypt.hashSync(password , salt),
+    userId,
   };
-  //check if email or password is not inserted.
+
+  //checking if email or password is not inserted.
   if (value.email === '' || value.password === '') {
     return  res.status(404).send("Email or Password is missed");
   }
 
-  //check if you have registerd before(your data is in the db).
+  //checking if you have registerd before(your data is in the db).
   const findEmail = findUserByEmail(value.email);
+
   if (findEmail) {
     return  res.status(400).send("Email exists");
   }
@@ -297,10 +318,10 @@ app.post('/register',(req,res)=>{
   res.redirect('/urls');
 });
 
-
 /**
  ** 404 error
 */
+
 
 
 
