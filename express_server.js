@@ -4,7 +4,8 @@
 const express = require('express');
 const app = express();
 const PORT = 8080;
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
+// const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const bcrypt = require("bcryptjs");
 const salt = bcrypt.genSaltSync(10);
@@ -19,7 +20,14 @@ app.set('view engine','ejs');
 ///////Middleware
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-app.use(cookieParser());
+// app.use(cookieParser());
+
+app.use(cookieSession({
+  name: 'session',
+  keys: ['HILHL'],
+  maxAge: 24 * 60 * 60 * 1000
+})
+);
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
 
@@ -99,12 +107,11 @@ app.get("/hello", (req, res) => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.get('/urls',(req,res) => {
-  const userId = req.cookies['user_id'];
+  // const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
   if (!userId) {
     res.send(`<h1>You have to login</h1>`);
   }
-
-
 
   const user = users[userId];
 
@@ -114,7 +121,8 @@ app.get('/urls',(req,res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const userId = req.cookies['user_id'];
+  // const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
   if (userId) {
     const user = users[userId];
     const templateVars = {
@@ -141,7 +149,8 @@ app.get("/u/:id", (req, res) => {
  ** Get particular URL to update (showing the user their newly created short url on the app)
 */
 app.get("/urls/:id", (req, res) => {
-  const userId = req.cookies['user_id'];
+  // const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
 
   const urlUser = urlsForUser(userId);
   if (!userId) {
@@ -162,7 +171,9 @@ app.get("/urls/:id", (req, res) => {
 */
 
 app.get('/register',(req,res)=>{
-  const userId = req.cookies['user_id'];
+  // const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
+
   if (userId) {
     res.redirect('/urls');
   }
@@ -178,8 +189,9 @@ app.get('/register',(req,res)=>{
 */
 
 app.get('/login',(req,res)=>{
-  
-  const userId = req.cookies['user_id'];
+  // const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
+
   if (userId) {
     res.redirect('/urls');
   }
@@ -195,7 +207,8 @@ app.get('/login',(req,res)=>{
 */
 
 app.post("/urls", (req, res) => {
-  const userId = req.cookies['user_id'];
+  // const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
   if (!userId) {
     return res.send(`<h1>You must be login</h1>`);
   }
@@ -210,6 +223,7 @@ app.post("/urls", (req, res) => {
 */
 
 app.post('/urls/edit/:id',(req,res)=>{
+  // const userId = req.cookies['user_id'];
   const userId = req.cookies['user_id'];
   const urlUser = urlsForUser(userId);
   if (urlUser) {
@@ -225,7 +239,8 @@ app.post('/urls/edit/:id',(req,res)=>{
 */
 
 app.post('/urls/:id/delete',(req,res)=>{
-  const userId = req.cookies['user_id'];
+  // const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
   const urlUser = urlsForUser(userId);
   if (urlUser) {
     const id = req.params.id;
@@ -244,18 +259,17 @@ app.post('/login',(req,res)=>{
   const password = req.body.password;
   const generateId = generateRandomString();
 
-
   const value = {
     id : generateId,
     email,
     password :  bcrypt.hashSync(password , salt),
-    userId : req.cookies['user_id'],
+    // userId : req.cookies['user_id'],
+    userId :  req.session.user_id
   };
-
- 
 
   users[generateId] = value;
   
+  //using helper function
   const user = findUserByEmail(value.email);
 
   if (!user) {
@@ -265,7 +279,8 @@ app.post('/login',(req,res)=>{
   for (let user in users) {
     if (email === users[user]['email']) {
       if (password === users[user]['password']) {
-        res.cookie('user_id',generateId);
+        // res.cookie('user_id',generateId);
+        req.session['user_id'] = generateId;
         res.redirect('/urls');
       }
     }
@@ -279,7 +294,8 @@ app.post('/login',(req,res)=>{
  */
 
 app.post('/logout',(req,res)=>{
-  res.clearCookie('user_id');
+  // res.clearCookie('user_id');
+  res.session = null;
   res.redirect('/urls');
 });
 
@@ -292,13 +308,14 @@ app.post('/register',(req,res)=>{
   const id = generateId;
   const email = req.body.email;
   const password = req.body.password;
-  const userId = res.cookie('user_id',generateId);
+  // const userId = res.cookie('user_id',generateId);
+
 
   const value = {
     id,
     email,
     password :  bcrypt.hashSync(password , salt),
-    userId,
+    userId : req.session['user_id'] = generateId,
   };
 
   //checking if email or password is not inserted.
@@ -314,7 +331,8 @@ app.post('/register',(req,res)=>{
   }
   
   users[generateId] = value;
-  res.cookie('user_id',generateId);
+  // res.cookie('user_id',generateId);
+  req.session['user_id'] = generateId;
   res.redirect('/urls');
 });
 
