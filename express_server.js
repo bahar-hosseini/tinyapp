@@ -63,13 +63,18 @@ const users = {
     id: "UZtT4V",
     email: "bahar.h@gmail.com",
     password: "qazwsx",
+    numVisitNew: 0,
+    numVisitEdit : 0
   },
   NxFM3y: {
     id: "NxFM3y",
     email: "bahar_hssn@example.com",
     password: "edcrfv",
+    numVisitNew: 0,
+    numVisitEdit : 0
   },
 };
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////Get Requests
@@ -112,8 +117,10 @@ app.get("/urls/new", (req, res) => {
   const userId = req.session.user_id;
   if (userId) {
     const user = users[userId];
+    let countNew = user['numVisitNew'] += 1;
     const templateVars = {
-      user
+      user,
+      countNew
     };
     return res.render("urls_new", templateVars);
   }
@@ -148,8 +155,9 @@ app.get("/urls/:id", (req, res) => {
   }
   if (urlUser) {
     const user = users[userId];
+    let countEdit = user['numVisitEdit'] += 1;
     const id = req.params.id;
-    const templateVars = { id, longURL:urlUser,user};
+    const templateVars = { id, longURL:urlUser,user,countEdit};
     return  res.render("urls_show", templateVars);
   }
   return  res.send(`<h2>You haven't added this url</h2>`);
@@ -252,7 +260,9 @@ app.post('/login',(req,res)=>{
     id : generateId,
     email,
     password :  bcrypt.hashSync(password , salt),
-    userId :  req.session.user_id
+    userId :  req.session.user_id,
+    numVisitNew : 0,
+    numVisitEdit :0
   };
 
   users[generateId] = value;
@@ -302,7 +312,9 @@ app.post('/register',(req,res)=>{
     id,
     email,
     password :  bcrypt.hashSync(password , salt),
-    userId
+    userId,
+    numVisitNew : 0,
+    numVisitEdit :0
   };
 
   //checking if email or password is not inserted.
