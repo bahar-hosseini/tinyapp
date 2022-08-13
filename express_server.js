@@ -68,8 +68,10 @@ const users = {
     id: "NxFM3y",
     email: "bahar_hssn@example.com",
     password: "edcrfv",
+    numVisit: 0
   },
 };
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////Get Requests
@@ -112,8 +114,10 @@ app.get("/urls/new", (req, res) => {
   const userId = req.session.user_id;
   if (userId) {
     const user = users[userId];
+    let count = user['numVisit'] += 1;
     const templateVars = {
-      user
+      user,
+      count
     };
     return res.render("urls_new", templateVars);
   }
@@ -302,7 +306,8 @@ app.post('/register',(req,res)=>{
     id,
     email,
     password :  bcrypt.hashSync(password , salt),
-    userId
+    userId,
+    numVisit : 0
   };
 
   //checking if email or password is not inserted.
