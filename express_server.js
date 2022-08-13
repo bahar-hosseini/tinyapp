@@ -2,10 +2,10 @@
 ///////Configuration
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const express = require('express');
+const methodOverride = require('method-override');
 const app = express();
 const PORT = 8080;
 const cookieSession = require('cookie-session');
-// const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const bcrypt = require("bcryptjs");
 const salt = bcrypt.genSaltSync(10);
@@ -14,8 +14,8 @@ const salt = bcrypt.genSaltSync(10);
 ///////Internal Modules
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const getUserByEmail = require('./helpers');
-
+const {getUserByEmail} = require('./helpers');
+const {urlsForUser} = require('./helpers');
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////Template engines (Ejs)
@@ -27,7 +27,7 @@ app.set('view engine','ejs');
 ///////Middleware
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// app.use(cookieParser());
+app.use(methodOverride('_method'));
 
 app.use(cookieSession({
   name: 'session',
@@ -71,19 +71,6 @@ const users = {
   },
 };
 
-
-/**
- ** Helper function
-*/
-
-const urlsForUser = (id) =>{
-  for (let key in urlDatabase) {
-    if (id === urlDatabase[key]['userID'])
-      return urlDatabase[key]['longURL'];
-  }
-};
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////Get Requests
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -104,7 +91,7 @@ app.get("/hello", (req, res) => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.get('/urls',(req,res) => {
-  // const userId = req.cookies['user_id'];
+
   const userId = req.session.user_id;
   if (!userId) {
     res.send(`<div><h1>You have to login</h1>
@@ -121,7 +108,7 @@ app.get('/urls',(req,res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  // const userId = req.cookies['user_id'];
+
   const userId = req.session.user_id;
   if (userId) {
     const user = users[userId];
@@ -136,6 +123,7 @@ app.get("/urls/new", (req, res) => {
 /**
  ** Get requests to the endpoint "/u/:id" will redirect to its longURL
 */
+
 app.get("/u/:id", (req, res) => {
 
   const longURL = urlDatabase[req.params.id];
@@ -145,14 +133,16 @@ app.get("/u/:id", (req, res) => {
   }
   return res.redirect(longURL['longURL']);
 });
+
 /**
  ** Get particular URL to update (showing the user their newly created short url on the app)
 */
+
 app.get("/urls/:id", (req, res) => {
-  // const userId = req.cookies['user_id'];
+
   const userId = req.session.user_id;
 
-  const urlUser = urlsForUser(userId);
+  const urlUser = urlsForUser(userId,urlDatabase);
   if (!userId) {
     return  res.send('<h2>Please signin</h2>');
   }
@@ -162,7 +152,6 @@ app.get("/urls/:id", (req, res) => {
     const templateVars = { id, longURL:urlUser,user};
     return  res.render("urls_show", templateVars);
   }
-
   return  res.send(`<h2>You haven't added this url</h2>`);
 });
 
@@ -171,7 +160,7 @@ app.get("/urls/:id", (req, res) => {
 */
 
 app.get('/register',(req,res)=>{
-  // const userId = req.cookies['user_id'];
+
   const userId = req.session.user_id;
 
   if (userId) {
@@ -189,7 +178,7 @@ app.get('/register',(req,res)=>{
 */
 
 app.get('/login',(req,res)=>{
-  // const userId = req.cookies['user_id'];
+
   const userId = req.session.user_id;
 
   if (userId) {
@@ -207,7 +196,7 @@ app.get('/login',(req,res)=>{
 */
 
 app.post("/urls", (req, res) => {
-  // const userId = req.cookies['user_id'];
+
   const userId = req.session.user_id;
   if (!userId) {
     return res.send(`<h1>You must be login</h1>`);
@@ -222,10 +211,10 @@ app.post("/urls", (req, res) => {
  **POST Edit URLs
 */
 
-app.post('/urls/edit/:id',(req,res)=>{
-  // const userId = req.cookies['user_id'];
+app.put('/urls/:id',(req,res)=>{
+
   const userId = req.session.user_id;
-  const urlUser = urlsForUser(userId);
+  const urlUser = urlsForUser(userId,urlDatabase);
   if (urlUser) {
     const id = req.params.id;
     urlDatabase[id] = {longURL:req.body.newURL,userID:userId};
@@ -238,10 +227,10 @@ app.post('/urls/edit/:id',(req,res)=>{
  **POST Delete URLs
 */
 
-app.post('/urls/:id/delete',(req,res)=>{
-  // const userId = req.cookies['user_id'];
+app.delete('/urls/:id',(req,res)=>{
+
   const userId = req.session.user_id;
-  const urlUser = urlsForUser(userId);
+  const urlUser = urlsForUser(userId,urlDatabase);
   if (urlUser) {
     const id = req.params.id;
     delete urlDatabase[id];
@@ -263,14 +252,14 @@ app.post('/login',(req,res)=>{
     id : generateId,
     email,
     password :  bcrypt.hashSync(password , salt),
-    // userId : req.cookies['user_id'],
     userId :  req.session.user_id
   };
 
   users[generateId] = value;
-  
+ 
   //using helper function
   const user = getUserByEmail(email,users);
+
 
   //cheking if the user has registerd befor (using helper function)
   if (!user) {
@@ -280,9 +269,9 @@ app.post('/login',(req,res)=>{
   //checking if the username and pasword match
   if (user) {
     if (password === users[user]['password']) {
-      // res.cookie('user_id',generateId);
+      
       req.session['user_id'] = generateId;
-      res.redirect('/urls');
+      return  res.redirect('/urls');
     }
   }
   return res.status(403).send('email or password doesn\'t match');
@@ -293,7 +282,6 @@ app.post('/login',(req,res)=>{
  */
 
 app.post('/logout',(req,res)=>{
-  // res.clearCookie('user_id');
   req.session = null;
   res.redirect('/urls');
 });
@@ -307,7 +295,6 @@ app.post('/register',(req,res)=>{
   const id = generateId;
   const email = req.body.email;
   const password = req.body.password;
-  // const userId = res.cookie('user_id',generateId);
   const userId = req.session['user_id'] = generateId;
 
   //collecting id, email and password as a value to assign it to users database
@@ -331,15 +318,10 @@ app.post('/register',(req,res)=>{
   }
   
   users[generateId] = value;
-  // res.cookie('user_id',generateId);
+
   req.session['user_id'] = generateId;
   res.redirect('/urls');
 });
-
-/**
- ** 404 error
-*/
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////Listener

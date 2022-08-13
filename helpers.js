@@ -11,4 +11,13 @@ const getUserByEmail = (email,database) => {
   return false;
 };
 
-module.exports = getUserByEmail;
+
+const urlsForUser = (id,database) =>{
+  for (let key in database) {
+    if (id === database[key]['userID'])
+      return database[key]['longURL'];
+  }
+};
+
+
+module.exports = {getUserByEmail, urlsForUser};

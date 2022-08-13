@@ -24,7 +24,11 @@
 
       <div class="card-footer text-muted">
         <h2 class="text-secondary">Edit</h2>
-        <form class="form-inline" method="POST" action="/urls/edit/<%= id %>">
+        <form
+          class="form-inline"
+          method="POST"
+          action="/urls/<%= id %>?_method=PUT"
+        >
           <div class="container">
             <div class="row justify-content-center">
               <div class="form-group mx-md-3 mb-2">
