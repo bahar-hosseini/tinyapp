@@ -51,7 +51,6 @@ const generateRandomString = () => {
   return result;
 };
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////Get Requests
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,8 +82,7 @@ app.get('/urls',(req,res) => {
 
   const user = users[userId];
 
-  const templateVars = { urls: urlDatabase,user
-  };
+  const templateVars = { urls: urlDatabase, user};
   return  res.render("urls_index", templateVars);
 });
 
@@ -133,7 +131,7 @@ app.get("/urls/:id", (req, res) => {
     const user = users[userId];
     let countEdit = user['numVisitEdit'] += 1;
     const id = req.params.id;
-    const templateVars = { id, longURL:urlUser,user,countEdit};
+    const templateVars = { id, longURL:urlUser, user, countEdit};
     return  res.render("urls_show", templateVars);
   }
   return  res.send(`<h2>You haven't added this url</h2>`);
@@ -148,13 +146,13 @@ app.get('/register',(req,res)=>{
   const userId = req.session.user_id;
 
   if (userId) {
-    res.redirect('/urls');
+    return  res.redirect('/urls');
   }
   const user = users[userId];
   const templateVars = {
     user
   };
-  res.render("urls-registration",templateVars);
+  return res.render("urls-registration",templateVars);
 });
 
 /**
@@ -166,13 +164,13 @@ app.get('/login',(req,res)=>{
   const userId = req.session.user_id;
 
   if (userId) {
-    res.redirect('/urls');
+    return  res.redirect('/urls');
   }
   const user = users[userId];
   const templateVars = {
     user
   };
-  res.render("urls-login",templateVars);
+  return res.render("urls-login",templateVars);
 });
 
 /**
@@ -188,7 +186,7 @@ app.post("/urls", (req, res) => {
   const newId = generateRandomString();
   urlDatabase[newId] = {longURL:req.body.longURL,
     userID:userId};
-  res.redirect(`/urls/${newId}`);
+  return res.redirect(`/urls/${newId}`);
 });
 
 /**
@@ -231,12 +229,15 @@ app.post('/login',(req,res)=>{
   const email = req.body.email;
   const password = req.body.password;
   const generateId = generateRandomString();
+  const userId = req.session.user_id = generateId;
 
+
+  
   const value = {
     id : generateId,
     email,
     password :  bcrypt.hashSync(password , salt),
-    userId :  req.session.user_id,
+    userId,
     numVisitNew : 0,
     numVisitEdit :0
   };
@@ -255,7 +256,7 @@ app.post('/login',(req,res)=>{
   //checking if the username and pasword match
   if (user) {
     if (password === users[user]['password']) {
-      
+
       req.session['user_id'] = generateId;
       return  res.redirect('/urls');
     }
@@ -269,7 +270,7 @@ app.post('/login',(req,res)=>{
 
 app.post('/logout',(req,res)=>{
   req.session = null;
-  res.redirect('/urls');
+  return  res.redirect('/urls');
 });
 
 /**
@@ -293,6 +294,7 @@ app.post('/register',(req,res)=>{
     numVisitEdit :0
   };
 
+
   //checking if email or password is not inserted.
   if (value.email === '' || value.password === '') {
     return  res.status(404).send("Email or Password is missed");
@@ -308,7 +310,7 @@ app.post('/register',(req,res)=>{
   users[generateId] = value;
 
   req.session['user_id'] = generateId;
-  res.redirect('/urls');
+  return res.redirect('/urls');
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
