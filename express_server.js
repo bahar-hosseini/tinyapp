@@ -16,6 +16,8 @@ const salt = bcrypt.genSaltSync(10);
 
 const {getUserByEmail} = require('./helpers');
 const {urlsForUser} = require('./helpers');
+const {urlDatabase} = require('./database');
+const {users} = require('./database');
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////Template engines (Ejs)
@@ -47,32 +49,6 @@ const generateRandomString = () => {
   let chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   for (let i = 6; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
   return result;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////Mock Databases
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-const urlDatabase = {
-  "b2xVn2":{longURL:"http://www.lighthouselabs.ca",userID: "aJ48lW"} ,
-  "9sm5xK":{longURL:"http://www.google.com",userID: "aJ48lW"} ,
-};
-
-const users = {
-  UZtT4V: {
-    id: "UZtT4V",
-    email: "bahar.h@gmail.com",
-    password: "qazwsx",
-    numVisitNew: 0,
-    numVisitEdit : 0
-  },
-  NxFM3y: {
-    id: "NxFM3y",
-    email: "bahar_hssn@example.com",
-    password: "edcrfv",
-    numVisitNew: 0,
-    numVisitEdit : 0
-  },
 };
 
 
@@ -124,7 +100,7 @@ app.get("/urls/new", (req, res) => {
     };
     return res.render("urls_new", templateVars);
   }
-  res.redirect('/login');
+  return res.redirect('/login');
 });
 
 /**
